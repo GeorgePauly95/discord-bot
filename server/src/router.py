@@ -16,8 +16,8 @@ class Router:
 
     def register_route(self, route, methods):
         def wrapper_register_route(controller):
-            route_keys = route.split("/")
             for method in methods:
+                route_keys = route.split("/")
                 self.router[method].add(route_keys, controller)
             return controller
 

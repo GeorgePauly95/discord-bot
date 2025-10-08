@@ -10,6 +10,7 @@ class Connection:
 
     def parse_request(self):
         complete_message = b""
+        print(f"Starting to read request on socket with id: {id(self.socket)}")
         while b"\r\n\r\n" not in complete_message:
             message = self.socket.recv(10)
             complete_message += message
@@ -18,6 +19,8 @@ class Connection:
             message=request_line_headers.decode("utf-8")
         )
         if "Content-Length" in parsed_request["headers"].keys():
+            if parsed_request["headers"]["Content-Length"] == '0':
+                return Request(parsed_request)
             msg_len = int(parsed_request["headers"]["Content-Length"]) - len(
                 initial_body
             )
@@ -48,7 +51,12 @@ class Connection:
         }
         return request_dict | {"headers": rest_dict}
 
-    def respond(self, response):
+    def respond(self, response, request):
+        if request.close_connection == True:
+            self.socket.send(response)
+            self.socket.shutdown(socket.SHUT_WR)
+            self.socket.close()
+            return
         self.socket.send(response)
-        self.socket.shutdown(socket.SHUT_WR)
-        self.socket.close()
+
+

@@ -1,7 +1,6 @@
 from urllib.parse import unquote, unquote_plus
 from .utils import splitter
 
-
 class Request:
     def __init__(self, message={}):
         self.method = message["method"]
@@ -22,3 +21,15 @@ class Request:
             key, value = query_param.split("=")
             self.query_params[key] = value
         return uri_pair[0]
+
+    def close_connection(self):
+        return "Connection" in self.headers \
+                and self.headers["Connection"] == "close"
+    
+    def close_connection_1_0(self):
+        return "Connection" not in self.headers \
+                or self.headers["Connection"] == "close"
+
+    
+    def is_old_protocol(self):
+        return self.protocol == "HTTP/1.0"
