@@ -23,13 +23,8 @@ class Request:
         return uri_pair[0]
 
     def close_connection(self):
+        if self.protocol == "HTTP/1.0":
+            return "Connection" not in self.headers \
+                    or self.headers["Connection"] == "close"
         return "Connection" in self.headers \
                 and self.headers["Connection"] == "close"
-    
-    def close_connection_1_0(self):
-        return "Connection" not in self.headers \
-                or self.headers["Connection"] == "close"
-
-    
-    def is_old_protocol(self):
-        return self.protocol == "HTTP/1.0"

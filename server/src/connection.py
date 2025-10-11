@@ -10,7 +10,7 @@ class Connection:
 
     def parse_request(self):
         complete_message = b""
-        print(f"Starting to read request on socket with id: {id(self.socket)}")
+        print(f"socket id: {id(self.socket)}")
         while b"\r\n\r\n" not in complete_message:
             message = self.socket.recv(10)
             complete_message += message
@@ -18,6 +18,8 @@ class Connection:
         parsed_request = self.parse_request_line_headers(
             message=request_line_headers.decode("utf-8")
         )
+
+        #Non Chunked Request
         if "Content-Length" in parsed_request["headers"].keys():
             if parsed_request["headers"]["Content-Length"] == '0':
                 return Request(parsed_request)
@@ -33,6 +35,19 @@ class Connection:
                 request = Request(parsed_request)
                 request.body = parsed_request["body"]
                 return request
+
+        #Chunked request
+        if "Transfer-Encoding" in parsed_request["headers"].keys():
+            chunk_data = initial_body
+            while b"0\r\n" not in chunk_data:
+                chunk_data += self.socket.recv(1)
+            chunks = splitter(chunk_data, b"\r\n")
+            print(f"Chunks are: {chunks}")
+            complete_body = b"".join([chunks[i] for i in range(len(chunks)) if i%2==1])
+            parsed_request["body"] = complete_body.decode("utf-8")
+            request = Request(parsed_request)
+            request.body = parsed_request["body"]
+            return request
         return Request(parsed_request)
 
     def parse_request_line_headers(self, message):

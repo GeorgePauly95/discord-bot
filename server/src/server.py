@@ -19,31 +19,22 @@ class Server:
         request = connection.parse_request()
         routing_output = self.router.match_route(request)
         body, status_code, headers = routing_output(request)
-        response = Response(headers=headers, body=body, status_code=status_code)
-        if request.is_old_protocol() is True:
-            print("identified as old protocol")
+        response = Response(headers=headers, status_code=status_code)
+        response.set_body(body)
+        if request.protocol == "HTTP/1.0":
             response.protocol = "HTTP/1.0"
-            if request.close_connection_1_0() is True:
-                print("client is asking to close connection")
-                connection.respond(response.serialize(), request)
-                return
-            print("client is asking to reuse connection")
-            response.headers["Connection"] = "keep-alive"
+        if request.close_connection() is True:
+            response.headers["Connection"] = "close"
             connection.respond(response.serialize(), request)
-        else:
-            if request.close_connection() == True:
-                response.headers["Connection"] = "close"
-                connection.respond(response.serialize(), request)
-                return
-            response.headers["Connection"] = "keep-alive"
-            connection.respond(response.serialize(), request)
-            self.handle_request(connection)
+            return
+        response.headers["Connection"] = "keep-alive"
+        connection.respond(response.serialize(), request)
+        self.handle_request(connection)
 
 
     def start(self):
         try:
             while True:
-                # a new connection is created!
                 conn_socket, address = self.socket.accept()
                 connection = Connection(conn_socket)
                 t = threading.Thread(target=self.handle_request, args=(connection,))
