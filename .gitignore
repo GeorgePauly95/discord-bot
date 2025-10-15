@@ -1,5 +1,4 @@
-info.txt
-venv/
+__pycache__/
+discord_bot_venv/
 .env
-server/big.txt
-server/pg2701.txt
+type_hints.py
