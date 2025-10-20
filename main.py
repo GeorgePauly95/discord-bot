@@ -19,11 +19,38 @@ def verify_signature(signature, timestamp, body):
     except BadSignatureError:
         return False
 
-def acknowledge_ping(body):
-    json_body = json.loads(body)
-    if json_body["type"] == 1:
+def blep(body):
+    data = body["data"]
+    user_input = data["options"]
+    animal = user_input[0]["value"]
+    small_size = user_input[1]["value"]
+    if animal == "animal_dog":
+        content = "bow bow!"
+    elif animal == "animal_cat":
+        content = "meow meow"
+    elif animal == "animal_penguin":
+        content = "chirp chirp"
+    if small_size == True:
+        return {"type": 4,
+                "data": {
+                    "content": content
+                    }
+                }
+    return {
+        "type": 4,
+        "data": {
+            "content": content.upper()
+            }
+        }
+
+command_directory = {"blep": blep}
+
+def assign_command(body):
+    type = body["type"]
+    if type == 1:
         return {"type": 1}
-    return "Not PING!"
+    name = body["data"]["name"]
+    return command_directory[name](body)
 
 app = FastAPI()
 
@@ -37,4 +64,5 @@ async def root(request: Request):
     print(f"Body is:\n{body}")
     if not verify_signature(signature, timestamp, body):
         raise HTTPException(status_code=401,detail="Invalid signature")
-    return acknowledge_ping(body)
+    json_body = json.loads(body)
+    return assign_command(json_body)
