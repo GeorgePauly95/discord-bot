@@ -19,18 +19,22 @@ def verify_signature(signature, timestamp, body):
     except BadSignatureError:
         return False
 
+def acknowledge_ping(body):
+    json_body = json.loads(body)
+    if json_body["type"] == 1:
+        return {"type": 1}
+    return "Not PING!"
+
 app = FastAPI()
 
 @app.post("/interactions")
-def interactions(request: Request):
+async def root(request: Request):
     headers = request.headers
     signature = headers.get("X-Signature-Ed25519")
     timestamp = headers.get("X-Signature-Timestamp")
-    body = request.body().decode()
-    # Did not include the above 4 lines in verify_signature function, 
-    # since they will be used for other purposes. 
+    body = await request.body()
+    body = body.decode()
+    print(f"Body is:\n{body}")
     if not verify_signature(signature, timestamp, body):
         raise HTTPException(status_code=401,detail="Invalid signature")
-    acknowledge_ping(body)
-
-
+    return acknowledge_ping(body)
