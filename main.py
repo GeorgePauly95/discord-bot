@@ -43,7 +43,14 @@ def blep(body):
             }
         }
 
-command_directory = {"blep": blep}
+def register_devhud(body):
+    print(body)
+    return {"type": 4,
+            "data": {
+                "content": "Your Dev Huddle has been registered!"
+                }
+            }
+command_directory = {"blep": blep, "register_devhud":register_devhud}
 
 def assign_command(body):
     type = body["type"]
