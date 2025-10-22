@@ -2,3 +2,4 @@ __pycache__/
 discord_bot_venv/
 .env
 type_hints.py
+mongodb-bin
