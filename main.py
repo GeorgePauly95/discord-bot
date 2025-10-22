@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request, HTTPException
 from dotenv import load_dotenv
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
-from commands import blep, register_devhud 
+from responses import blep, register_devhud 
 load_dotenv()
 
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
@@ -22,7 +22,7 @@ def verify_signature(signature, timestamp, body):
 
 command_directory = {"blep": blep, "register_devhud":register_devhud}
 
-def assign_command(body):
+def assign_response(body):
     type = body["type"]
     if type == 1:
         return {"type": 1}
@@ -41,4 +41,4 @@ async def root(request: Request):
     if not verify_signature(signature, timestamp, body):
         raise HTTPException(status_code=401,detail="Invalid signature")
     json_body = json.loads(body)
-    return assign_command(json_body)
+    return assign_response(json_body)
